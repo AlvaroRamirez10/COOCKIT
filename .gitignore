@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Environment variables (contain secrets — never subir)
+.env
+.env.*
+
+# Claude Code memory
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

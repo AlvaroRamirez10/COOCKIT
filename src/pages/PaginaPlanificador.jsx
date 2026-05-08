@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { CalendarDays, UtensilsCrossed, MoonStar, Trash2, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { usePlanificador } from '../context/planificadorContext';
+import { usePlanificadorStore } from '../stores/planificadorStore';
 import NavegacionInferior from '../components/NavegacionInferior';
 import BarraBusqueda from '../components/BarraBusqueda';
 
 export default function PaginaPlanificador() {
   const navigate = useNavigate();
-  const { diasSemana, plan, limpiarSlot, limpiarDia, limpiarSemana } = usePlanificador();
+  const { diasSemana, plan, limpiarSlot, limpiarDia, limpiarSemana } = usePlanificadorStore();
   const [mostrarBusqueda, setMostrarBusqueda] = useState(false);
 
   const totalSlots = diasSemana.length * 2;

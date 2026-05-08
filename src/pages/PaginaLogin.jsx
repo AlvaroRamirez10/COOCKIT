@@ -1,23 +1,34 @@
+// ─────────────────────────────────────────────
+// PaginaLogin.jsx — Página de inicio de sesión
+// Para cambiar el mensaje de error, busca setError() abajo.
+// Para redirigir a otro sitio tras el login, cambia navigate('/inicio').
+// Los colores de la marca están en el objeto style con #E8631A.
+// ─────────────────────────────────────────────
+
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock } from 'lucide-react';
-import { useAuth } from '../context/authContext';
+import { useAuthStore } from '../stores/authStore';
 import logo from '../resources/logo.png';
 
 export default function PaginaLogin() {
   const navigate = useNavigate();
-  const { iniciarSesion } = useAuth();
+  const { iniciarSesion } = useAuthStore(); // Función de login definida en authStore.js
+
+  // ── Estado del formulario ─────────────────────────────────────────────
   const [email, setEmail] = useState('');
   const [contrasena, setContrasena] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState('');       // Mensaje de error visible al usuario
   const [cargando, setCargando] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(false); // Controla la animación de entrada
 
+  // Animación de entrada: espera 100ms antes de mostrar el contenido
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 100);
     return () => clearTimeout(t);
   }, []);
 
+  // ── Lógica del formulario ─────────────────────────────────────────────
   const manejarEnvio = async (e) => {
     e.preventDefault();
     setError('');
@@ -25,16 +36,18 @@ export default function PaginaLogin() {
     const { error } = await iniciarSesion(email, contrasena);
     setCargando(false);
     if (error) {
+      // Para personalizar el mensaje de error, cambia el texto aquí
       setError('Credenciales incorrectas. Inténtalo de nuevo.');
     } else {
-      navigate('/inicio');
+      navigate('/inicio'); // Redirige tras login exitoso → cambia la ruta aquí
     }
   };
 
   return (
     <div className="min-h-screen overflow-hidden relative flex items-center justify-center" style={{ background: '#FDF6ED' }}>
 
-      {/* ── Fondo decorativo (igual que PaginaInicial) ── */}
+      {/* ── Fondo decorativo ─────────────────────────────────────────────
+          Círculos y partículas animadas. Para quitarlos, borra este bloque. */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0" style={{
           background: 'radial-gradient(ellipse 80% 60% at 50% 0%, #E8631A18 0%, transparent 70%), radial-gradient(ellipse 60% 80% at 80% 100%, #E8631A10 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 20% 80%, #E8631A0D 0%, transparent 60%)',
@@ -69,7 +82,8 @@ export default function PaginaLogin() {
         ))}
       </div>
 
-      {/* ── Contenido ── */}
+      {/* ── Contenido principal ───────────────────────────────────────────
+          Para cambiar el ancho máximo del formulario, modifica max-w-sm */}
       <div
         className="relative z-10 w-full max-w-sm mx-auto px-6 flex flex-col items-center"
         style={{
@@ -78,7 +92,7 @@ export default function PaginaLogin() {
           transition: 'opacity 0.8s ease, transform 0.8s ease',
         }}
       >
-        {/* Logo con halo */}
+        {/* Logo */}
         <div className="relative mb-6 flex items-center justify-center" style={{
           opacity: visible ? 1 : 0,
           transform: visible ? 'scale(1)' : 'scale(0.85)',
@@ -101,7 +115,8 @@ export default function PaginaLogin() {
           />
         </div>
 
-        {/* Tarjeta del formulario */}
+        {/* ── Tarjeta del formulario ────────────────────────────────────
+            Para cambiar el fondo de la tarjeta, modifica background abajo */}
         <div
           className="w-full rounded-3xl p-7"
           style={{
@@ -114,11 +129,12 @@ export default function PaginaLogin() {
             transition: 'opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s',
           }}
         >
+          {/* Para cambiar el título, modifica el texto aquí */}
           <h1 className="text-xl font-bold text-center mb-1" style={{ color: '#3d1a00' }}>Bienvenido de nuevo</h1>
           <p className="text-center text-xs uppercase tracking-widest mb-6" style={{ color: '#b85c1a', opacity: 0.7 }}>Inicia sesión para continuar</p>
 
           <form onSubmit={manejarEnvio} className="flex flex-col gap-4">
-            {/* Email */}
+            {/* Campo email */}
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'rgba(232,99,26,0.7)' }} />
               <input
@@ -139,7 +155,7 @@ export default function PaginaLogin() {
               />
             </div>
 
-            {/* Contraseña */}
+            {/* Campo contraseña */}
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'rgba(232,99,26,0.7)' }} />
               <input
@@ -160,13 +176,14 @@ export default function PaginaLogin() {
               />
             </div>
 
+            {/* Mensaje de error (solo visible si hay error) */}
             {error && (
               <p className="text-red-400 text-xs text-center bg-red-500/10 border border-red-500/20 rounded-lg py-2 px-3">
                 {error}
               </p>
             )}
 
-            {/* Botón principal */}
+            {/* Botón de envío — para cambiar el texto modifica los strings aquí */}
             <button
               type="submit"
               disabled={cargando}
@@ -186,14 +203,14 @@ export default function PaginaLogin() {
             </button>
           </form>
 
-          {/* Separador */}
+          {/* Separador visual */}
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(232,99,26,0.3))' }} />
             <div className="w-1 h-1 rounded-full bg-[#E8631A] opacity-50" />
             <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(232,99,26,0.3))' }} />
           </div>
 
-          {/* Links */}
+          {/* Links de navegación — modifica los to="..." para cambiar destinos */}
           <div className="flex flex-col items-center gap-2">
             <Link to="/registro" className="text-sm font-medium" style={{ color: 'rgba(232,99,26,0.9)' }}
               onMouseEnter={e => e.target.style.color = '#E8631A'}
@@ -201,6 +218,7 @@ export default function PaginaLogin() {
             >
               ¿No tienes cuenta? <span className="underline">Regístrate</span>
             </Link>
+            {/* Para implementar recuperar contraseña, añade aquí un Link a una nueva página */}
             <span className="text-xs" style={{ color: 'rgba(184,92,26,0.5)' }}>
               ¿Olvidaste tu contraseña?
             </span>
@@ -218,7 +236,8 @@ export default function PaginaLogin() {
         </div>
       </div>
 
-      {/* ── Keyframes ── */}
+      {/* ── Animaciones CSS ───────────────────────────────────────────────
+          Para modificar las animaciones del fondo, edita los keyframes aquí */}
       <style>{`
         @keyframes floatA {
           0%, 100% { transform: translate(0, 0) scale(1); }

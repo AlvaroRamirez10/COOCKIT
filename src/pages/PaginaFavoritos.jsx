@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useFavoritos } from '../context/favoritosContext';
+import { useFavoritosStore } from '../stores/favoritosStore';
+import { useAuthStore } from '../stores/authStore';
 import NavegacionInferior from '../components/NavegacionInferior';
 import BarraBusqueda from '../components/BarraBusqueda';
 
 export default function PaginaFavoritos() {
-  const { favoritos, quitarFavorito } = useFavoritos();
+  const { favoritos, quitarFavorito } = useFavoritosStore();
+  const { usuario } = useAuthStore();
   const navigate = useNavigate();
   const [mostrarBusqueda, setMostrarBusqueda] = useState(false);
 
@@ -55,7 +57,7 @@ export default function PaginaFavoritos() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <button
-                    onClick={(e) => { e.stopPropagation(); quitarFavorito(fav.meal_id); }}
+                    onClick={(e) => { e.stopPropagation(); quitarFavorito(usuario?.id, fav.meal_id); }}
                     className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow"
                   >
                     <Heart size={16} className="fill-[#E8631A] text-[#E8631A]" />

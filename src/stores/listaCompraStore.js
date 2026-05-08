@@ -1,6 +1,4 @@
-import { useEffect, useMemo, useState, startTransition } from 'react';
-import { ContextoListaCompra } from './listaCompraContext';
-import { useAuth } from './authContext';
+import { create } from 'zustand';
 
 const normalizar = (texto = '') => texto.trim().toLowerCase();
 
@@ -21,34 +19,28 @@ const unirRecetas = (actual = '', nueva = '') => {
   return lista.join(' · ');
 };
 
-export const ProveedorListaCompra = ({ children }) => {
-  const { usuario } = useAuth();
-  const [items, setItems] = useState([]);
+export const useListaCompraStore = create((set, get) => ({
+  items: [],
 
-  const storageKey = useMemo(() => {
-    if (!usuario?.id) return null;
-    return `coockit_lista_${usuario.id}`;
-  }, [usuario?.id]);
+  setItems: (items) => set({ items }),
 
-  useEffect(() => {
-    if (!storageKey) {
-      startTransition(() => setItems([]));
-      return;
-    }
+  cargarDelLocalStorage: (usuarioId) => {
     try {
+      const storageKey = `coockit_lista_${usuarioId}`;
       const guardado = localStorage.getItem(storageKey);
-      startTransition(() => setItems(guardado ? JSON.parse(guardado) : []));
+      set({ items: guardado ? JSON.parse(guardado) : [] });
     } catch {
-      startTransition(() => setItems([]));
+      set({ items: [] });
     }
-  }, [storageKey]);
+  },
 
-  useEffect(() => {
-    if (!storageKey) return;
+  guardarEnLocalStorage: (usuarioId) => {
+    const { items } = get();
+    const storageKey = `coockit_lista_${usuarioId}`;
     localStorage.setItem(storageKey, JSON.stringify(items));
-  }, [storageKey, items]);
+  },
 
-  const agregarDesdeReceta = (receta) => {
+  agregarDesdeReceta: (receta) => {
     const nuevos = [];
     for (let i = 1; i <= 20; i++) {
       const ingrediente = receta[`strIngredient${i}`];
@@ -66,8 +58,9 @@ export const ProveedorListaCompra = ({ children }) => {
 
     let cantidadAgregada = 0;
     let cantidadActualizada = 0;
-    setItems((prev) => {
-      const copia = [...prev];
+
+    set((state) => {
+      const copia = [...state.items];
       for (const nuevo of nuevos) {
         const index = copia.findIndex((it) => normalizar(it.nombre) === normalizar(nuevo.nombre));
         if (index === -1) {
@@ -82,38 +75,31 @@ export const ProveedorListaCompra = ({ children }) => {
           cantidadActualizada += 1;
         }
       }
-      return copia;
+      return { items: copia };
     });
 
     return { agregados: cantidadAgregada, actualizados: cantidadActualizada };
-  };
+  },
 
-  const alternarComprado = (id) => {
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, comprado: !it.comprado } : it)));
-  };
+  alternarComprado: (id) => {
+    set((state) => ({
+      items: state.items.map((it) => (it.id === id ? { ...it, comprado: !it.comprado } : it)),
+    }));
+  },
 
-  const eliminarItem = (id) => {
-    setItems((prev) => prev.filter((it) => it.id !== id));
-  };
+  eliminarItem: (id) => {
+    set((state) => ({
+      items: state.items.filter((it) => it.id !== id),
+    }));
+  },
 
-  const limpiarComprados = () => {
-    setItems((prev) => prev.filter((it) => !it.comprado));
-  };
+  limpiarComprados: () => {
+    set((state) => ({
+      items: state.items.filter((it) => !it.comprado),
+    }));
+  },
 
-  const vaciarLista = () => setItems([]);
-
-  return (
-    <ContextoListaCompra.Provider
-      value={{
-        items,
-        agregarDesdeReceta,
-        alternarComprado,
-        eliminarItem,
-        limpiarComprados,
-        vaciarLista,
-      }}
-    >
-      {children}
-    </ContextoListaCompra.Provider>
-  );
-};
+  limpiarTodo: () => {
+    set({ items: [] });
+  },
+}));

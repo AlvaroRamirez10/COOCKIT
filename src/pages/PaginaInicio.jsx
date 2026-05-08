@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/authContext';
+import { useAuthStore } from '../stores/authStore';
 import { apiRecetas } from '../hooks/useApiRecetas';
 import NavegacionInferior from '../components/NavegacionInferior';
 import TarjetaReceta from '../components/TarjetaReceta';
@@ -10,7 +10,7 @@ import logo from '../resources/logo.png';
 const RECETAS_POR_PAGINA = 20;
 
 export default function PaginaInicio() {
-  const { perfil, usuario } = useAuth();
+  const { perfil, usuario } = useAuthStore();
   const navigate = useNavigate();
 
   const [todasLasRecetas, setTodasLasRecetas] = useState([]);

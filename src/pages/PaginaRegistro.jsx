@@ -1,41 +1,57 @@
+// ─────────────────────────────────────────────
+// PaginaRegistro.jsx — Página de registro de nuevo usuario
+// Para añadir más campos (ej: teléfono), añade el estado, el input
+// y pásalo a registrarse() en authStore.js → options.data
+// Para cambiar la validación de contraseña, busca contrasena.length abajo.
+// ─────────────────────────────────────────────
+
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Lock } from 'lucide-react';
-import { useAuth } from '../context/authContext';
+import { useAuthStore } from '../stores/authStore';
 import logo from '../resources/logo.png';
 
 export default function PaginaRegistro() {
   const navigate = useNavigate();
-  const { registrarse } = useAuth();
+  const { registrarse } = useAuthStore(); // Función de registro definida en authStore.js
+
+  // ── Estado del formulario ─────────────────────────────────────────────
   const [nombreCompleto, setNombreCompleto] = useState('');
   const [email, setEmail] = useState('');
   const [contrasena, setContrasena] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState('');       // Mensaje de error visible al usuario
   const [cargando, setCargando] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(false); // Controla la animación de entrada
 
+  // Animación de entrada
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 100);
     return () => clearTimeout(t);
   }, []);
 
+  // ── Lógica del formulario ─────────────────────────────────────────────
   const manejarEnvio = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Validación de contraseña — para cambiar el mínimo, modifica el 6
     if (contrasena.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres.');
       return;
     }
+
     setCargando(true);
     const { error } = await registrarse(email, contrasena, nombreCompleto);
     setCargando(false);
+
     if (error) {
       setError(error.message || 'Error al crear la cuenta.');
     } else {
-      navigate('/inicio');
+      navigate('/inicio'); // Redirige tras registro exitoso → cambia la ruta aquí
     }
   };
 
+  // Estilos base de los inputs (fondo oscuro porque esta página tiene fondo oscuro)
   const inputStyle = {
     background: 'rgba(255,255,255,0.08)',
     border: '1px solid rgba(232,99,26,0.3)',
@@ -46,7 +62,8 @@ export default function PaginaRegistro() {
   return (
     <div className="min-h-screen overflow-hidden relative flex items-center justify-center" style={{ background: '#2d1200' }}>
 
-      {/* ── Fondo decorativo ── */}
+      {/* ── Fondo decorativo ─────────────────────────────────────────────
+          Para quitar las partículas animadas, borra este bloque completo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0" style={{
           background: 'radial-gradient(ellipse 80% 60% at 50% 0%, #E8631A30 0%, transparent 70%), radial-gradient(ellipse 60% 80% at 80% 100%, #b8420a22 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 20% 80%, #ff8c4220 0%, transparent 60%)',
@@ -81,7 +98,7 @@ export default function PaginaRegistro() {
         ))}
       </div>
 
-      {/* ── Contenido ── */}
+      {/* ── Contenido principal ───────────────────────────────────────────*/}
       <div
         className="relative z-10 w-full max-w-sm mx-auto px-6 py-8 flex flex-col items-center"
         style={{
@@ -90,7 +107,7 @@ export default function PaginaRegistro() {
           transition: 'opacity 0.8s ease, transform 0.8s ease',
         }}
       >
-        {/* Logo con halo */}
+        {/* Logo */}
         <div className="relative mb-5 flex items-center justify-center" style={{
           opacity: visible ? 1 : 0,
           transform: visible ? 'scale(1)' : 'scale(0.85)',
@@ -109,7 +126,7 @@ export default function PaginaRegistro() {
           />
         </div>
 
-        {/* Avatar con inicial */}
+        {/* Avatar con la inicial del nombre — se actualiza en tiempo real */}
         <div className="mb-4" style={{
           opacity: visible ? 1 : 0,
           transition: 'opacity 0.8s ease 0.2s',
@@ -124,7 +141,7 @@ export default function PaginaRegistro() {
           </div>
         </div>
 
-        {/* Tarjeta del formulario */}
+        {/* ── Tarjeta del formulario ────────────────────────────────────*/}
         <div
           className="w-full rounded-3xl p-7"
           style={{
@@ -137,13 +154,14 @@ export default function PaginaRegistro() {
             transition: 'opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s',
           }}
         >
+          {/* Para cambiar el título y subtítulo, modifica los textos aquí */}
           <h1 className="text-xl font-bold text-white text-center mb-1">Crea tu cuenta</h1>
           <p className="text-center text-xs uppercase tracking-widest mb-6" style={{ color: 'rgba(232,99,26,0.7)' }}>
             Únete y descubre recetas increíbles
           </p>
 
           <form onSubmit={manejarEnvio} className="flex flex-col gap-4">
-            {/* Nombre */}
+            {/* Campo nombre completo */}
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'rgba(232,99,26,0.7)' }} />
               <input
@@ -159,7 +177,7 @@ export default function PaginaRegistro() {
               />
             </div>
 
-            {/* Email */}
+            {/* Campo email */}
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'rgba(232,99,26,0.7)' }} />
               <input
@@ -175,7 +193,7 @@ export default function PaginaRegistro() {
               />
             </div>
 
-            {/* Contraseña */}
+            {/* Campo contraseña */}
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2" size={16} style={{ color: 'rgba(232,99,26,0.7)' }} />
               <input
@@ -191,13 +209,14 @@ export default function PaginaRegistro() {
               />
             </div>
 
+            {/* Mensaje de error */}
             {error && (
               <p className="text-red-400 text-xs text-center bg-red-500/10 border border-red-500/20 rounded-lg py-2 px-3">
                 {error}
               </p>
             )}
 
-            {/* Botón principal */}
+            {/* Botón de envío */}
             <button
               type="submit"
               disabled={cargando}
@@ -217,14 +236,14 @@ export default function PaginaRegistro() {
             </button>
           </form>
 
-          {/* Separador */}
+          {/* Separador visual */}
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(232,99,26,0.3))' }} />
             <div className="w-1 h-1 rounded-full bg-[#E8631A] opacity-50" />
             <div className="flex-1 h-px" style={{ background: 'linear-gradient(to left, transparent, rgba(232,99,26,0.3))' }} />
           </div>
 
-          {/* Link */}
+          {/* Link a login */}
           <div className="flex justify-center">
             <Link to="/login" className="text-sm font-medium" style={{ color: 'rgba(232,99,26,0.9)' }}
               onMouseEnter={e => e.target.style.color = '#E8631A'}
@@ -246,7 +265,7 @@ export default function PaginaRegistro() {
         </div>
       </div>
 
-      {/* ── Keyframes ── */}
+      {/* ── Animaciones CSS ───────────────────────────────────────────────*/}
       <style>{`
         @keyframes floatA {
           0%, 100% { transform: translate(0, 0) scale(1); }

@@ -1,13 +1,15 @@
 import { Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useFavoritos } from '../context/favoritosContext';
+import { useFavoritosStore } from '../stores/favoritosStore';
+import { useAuthStore } from '../stores/authStore';
 import { useState, useEffect, useRef } from 'react';
 import { traducirTituloReceta, traducirTermino } from '../utils/traduccion';
 
 export default function TarjetaReceta({ receta }) {
   const navigate = useNavigate();
-  const { esFavorito, agregarFavorito, quitarFavorito } = useFavoritos();
-  const favorito = esFavorito(receta.idMeal);
+  const { favoritos, agregarFavorito, quitarFavorito } = useFavoritosStore();
+  const { usuario } = useAuthStore();
+  const favorito = favoritos.some(f => f.meal_id === receta.idMeal);
 
   const [titulo, setTitulo] = useState(receta.strMeal);
   const [categoria, setCategoria] = useState(receta.strCategory || '');
@@ -40,7 +42,9 @@ export default function TarjetaReceta({ receta }) {
 
   const alternarFavorito = (e) => {
     e.stopPropagation();
-    favorito ? quitarFavorito(receta.idMeal) : agregarFavorito(receta);
+    if (usuario) {
+      favorito ? quitarFavorito(usuario.id, receta.idMeal) : agregarFavorito(usuario.id, receta);
+    }
   };
 
   return (

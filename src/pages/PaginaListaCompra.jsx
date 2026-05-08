@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { CheckCircle2, Circle, Trash2, ListPlus, ShoppingCart } from 'lucide-react';
-import { useListaCompra } from '../context/listaCompraContext';
+import { useListaCompraStore } from '../stores/listaCompraStore';
 import NavegacionInferior from '../components/NavegacionInferior';
 import BarraBusqueda from '../components/BarraBusqueda';
 
 export default function PaginaListaCompra() {
-  const { items, alternarComprado, eliminarItem, limpiarComprados, vaciarLista } = useListaCompra();
+  const { items, alternarComprado, eliminarItem, limpiarComprados, limpiarTodo } = useListaCompraStore();
   const [mostrarBusqueda, setMostrarBusqueda] = useState(false);
 
   const pendientes = items.filter((i) => !i.comprado).length;
@@ -51,7 +51,7 @@ export default function PaginaListaCompra() {
                 Limpiar comprados
               </button>
               <button
-                onClick={vaciarLista}
+                onClick={limpiarTodo}
                 className="text-xs px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"
               >
                 Vaciar lista

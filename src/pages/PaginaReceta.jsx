@@ -3,18 +3,21 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Heart, Clock, ChefHat, Globe, CalendarDays, X } from 'lucide-react';
 import { apiRecetas } from '../hooks/useApiRecetas';
 import { traducirRecetaCompleta } from '../utils/traduccion';
-import { useFavoritos } from '../context/favoritosContext';
-import { useListaCompra } from '../context/listaCompraContext';
-import { usePlanificador } from '../context/planificadorContext';
+import { useFavoritosStore } from '../stores/favoritosStore';
+import { useListaCompraStore } from '../stores/listaCompraStore';
+import { usePlanificadorStore } from '../stores/planificadorStore';
+import { useAuthStore } from '../stores/authStore';
 import NavegacionInferior from '../components/NavegacionInferior';
 import BarraBusqueda from '../components/BarraBusqueda';
 
 export default function PaginaReceta() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { esFavorito, agregarFavorito, quitarFavorito } = useFavoritos();
-  const { agregarDesdeReceta } = useListaCompra();
-  const { diasSemana, planificarReceta } = usePlanificador();
+  const { favoritos, agregarFavorito, quitarFavorito } = useFavoritosStore();
+  const { agregarDesdeReceta } = useListaCompraStore();
+  const { diasSemana, planificarReceta } = usePlanificadorStore();
+  const { usuario } = useAuthStore();
+  const esFavorito = () => (favoritos || []).some(f => f.meal_id === id);
   const [receta, setReceta] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [traduciendo, setTraduciendo] = useState(false);
@@ -53,7 +56,7 @@ export default function PaginaReceta() {
     );
   }
 
-  const favorito = esFavorito(receta.idMeal);
+  const favorito = esFavorito();
 
   // Extraer ingredientes
   const ingredientes = [];
@@ -120,7 +123,7 @@ export default function PaginaReceta() {
 
         {/* Botón favorito */}
         <button
-          onClick={() => favorito ? quitarFavorito(receta.idMeal) : agregarFavorito(receta)}
+          onClick={() => favorito ? quitarFavorito(usuario?.id, receta.idMeal) : agregarFavorito(usuario?.id, receta)}
           className="absolute top-5 right-4 bg-white/90 backdrop-blur rounded-full p-2 shadow-md hover:bg-white transition"
         >
           <Heart size={20} className={favorito ? 'fill-[#E8631A] text-[#E8631A]' : 'text-gray-500'} />

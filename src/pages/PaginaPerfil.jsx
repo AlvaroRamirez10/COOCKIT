@@ -1,8 +1,21 @@
+// ─────────────────────────────────────────────
+// PaginaPerfil.jsx — Página de perfil del usuario
+// Permite ver datos del usuario, editarlos y eliminar la cuenta.
+//
+// Para añadir un nuevo campo editable:
+//   1. Añade el campo al estado "form" abajo
+//   2. Añade el input en el "Panel edición"
+//   3. Añade la lógica de guardado en authStore.js → actualizarPerfil()
+//
+// Para añadir un nuevo acceso directo (botón de navegación):
+//   Copia uno de los botones de la sección "Opciones" y cambia el navigate()
+// ─────────────────────────────────────────────
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Heart, ChevronRight, Pencil, X, Check, Eye, EyeOff, Mail, Lock, CalendarDays } from 'lucide-react';
-import { useAuth } from '../context/authContext';
-import { useFavoritos } from '../context/favoritosContext';
+import { LogOut, User, Heart, ChevronRight, Pencil, X, Check, Eye, EyeOff, Mail, Lock, CalendarDays, Trash2, AlertCircle } from 'lucide-react';
+import { useAuthStore } from '../stores/authStore';
+import { useFavoritosStore } from '../stores/favoritosStore';
 import NavegacionInferior from '../components/NavegacionInferior';
 import BarraBusqueda from '../components/BarraBusqueda';
 
@@ -19,20 +32,28 @@ const campoStyle = {
 };
 
 export default function PaginaPerfil() {
-  const { usuario, perfil, cerrarSesion, actualizarPerfil } = useAuth();
-  const { favoritos } = useFavoritos();
+  // Datos del usuario y funciones del store global
+  const { usuario, perfil, cerrarSesion, actualizarPerfil, borrarCuenta } = useAuthStore();
+  const { favoritos } = useFavoritosStore(); // Para mostrar el contador de favoritos
   const navigate = useNavigate();
 
+  // ── Estados de la UI ──────────────────────────────────────────────────
   const [mostrarBusqueda, setMostrarBusqueda] = useState(false);
-  const [editando, setEditando] = useState(false);
-  const [guardando, setGuardando] = useState(false);
-  const [exito, setExito] = useState(false);
-  const [mostrarPass, setMostrarPass] = useState(false);
+  const [editando, setEditando] = useState(false);       // Abre/cierra el panel de edición
+  const [guardando, setGuardando] = useState(false);     // Spinner del botón guardar
+  const [exito, setExito] = useState(false);             // Mensaje de éxito tras guardar
+  const [mostrarPass, setMostrarPass] = useState(false); // Mostrar/ocultar contraseña
   const [mostrarConfirm, setMostrarConfirm] = useState(false);
+  const [mostrarEliminar, setMostrarEliminar] = useState(false); // Abre el modal de eliminar
+  const [confirmacionEliminar, setConfirmacionEliminar] = useState('');
+  const [borrando, setBorrando] = useState(false);
 
+  // Nombre que se muestra en la cabecera: primero full_name, luego parte del email
   const nombreMostrado = perfil?.full_name || usuario?.email?.split('@')[0] || 'Usuario';
-  const iniciales = nombreMostrado.charAt(0).toUpperCase();
+  const iniciales = nombreMostrado.charAt(0).toUpperCase(); // Letra del avatar
 
+  // ── Estado del formulario de edición ──────────────────────────────────
+  // Para añadir un campo nuevo, añádelo aquí y crea su input en el panel de edición
   const [form, setForm] = useState({
     nombre: perfil?.full_name || '',
     email: usuario?.email || '',
@@ -41,11 +62,13 @@ export default function PaginaPerfil() {
   });
   const [errores, setErrores] = useState({});
 
+  // Actualiza un campo del form y limpia su error
   const setField = (campo, valor) => {
     setForm(prev => ({ ...prev, [campo]: valor }));
     setErrores(prev => ({ ...prev, [campo]: undefined }));
   };
 
+  // Abre el panel de edición con los datos actuales del usuario
   const abrirEdicion = () => {
     setForm({ nombre: perfil?.full_name || '', email: usuario?.email || '', contrasena: '', confirmar: '' });
     setErrores({});
@@ -53,6 +76,8 @@ export default function PaginaPerfil() {
     setEditando(true);
   };
 
+  // ── Guardar cambios del perfil ────────────────────────────────────────
+  // Para añadir validaciones extra (ej: longitud del nombre), hazlo aquí
   const guardar = async () => {
     const nuevosErrores = {};
 
@@ -84,9 +109,26 @@ export default function PaginaPerfil() {
     }
   };
 
+  // ── Eliminar cuenta ───────────────────────────────────────────────────
+  // El usuario debe escribir "ELIMINAR" para confirmar.
+  // Para cambiar la palabra clave, modifica el string 'ELIMINAR' aquí
+  // y en el input del modal de abajo.
+  const manejarEliminarCuenta = async () => {
+    if (confirmacionEliminar !== 'ELIMINAR') return;
+    setBorrando(true);
+    const { exito: ok, errores } = await borrarCuenta(); // Llama a authStore.js → borrarCuenta()
+    setBorrando(false);
+    if (ok) {
+      navigate('/'); // Redirige a la portada tras eliminar la cuenta
+    } else {
+      alert(errores?.general || 'Error al eliminar la cuenta');
+    }
+  };
+
+  // ── Cerrar sesión ─────────────────────────────────────────────────────
   const manejarCerrarSesion = async () => {
     await cerrarSesion();
-    navigate('/');
+    navigate('/'); // Redirige a la portada → cambia aquí si quieres ir a otra página
   };
 
   return (
@@ -264,6 +306,33 @@ export default function PaginaPerfil() {
               </label>
             )}
 
+            {/* Divisor */}
+            <div style={{ borderTop: '1px solid #f0e4d7', margin: '1rem 0 1rem' }} />
+
+            {/* Botón eliminar cuenta */}
+            <button
+              onClick={() => setMostrarEliminar(true)}
+              style={{
+                width: '100%',
+                padding: '0.8rem',
+                borderRadius: '0.875rem',
+                border: '1.5px solid #fee2e2',
+                background: '#fef2f2',
+                color: '#dc2626',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(220,38,38,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                marginBottom: '1rem',
+              }}
+            >
+              <Trash2 size={16} /> Eliminar cuenta
+            </button>
+
             {/* Botón guardar */}
             <button
               onClick={guardar}
@@ -291,6 +360,123 @@ export default function PaginaPerfil() {
                 <><Check size={16} /> Guardar cambios</>
               )}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal confirmación eliminar cuenta */}
+      {mostrarEliminar && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 50,
+            background: 'rgba(0,0,0,0.35)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={e => { if (e.target === e.currentTarget) setMostrarEliminar(false); }}
+        >
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: '1.5rem',
+              width: '100%',
+              maxWidth: '420px',
+              padding: '2rem 1.5rem',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+              textAlign: 'center',
+            }}
+          >
+            {/* Icono de alerta */}
+            <div style={{
+              width: '4rem', height: '4rem',
+              background: '#fee2e2',
+              borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 1rem',
+            }}>
+              <AlertCircle size={24} color="#dc2626" />
+            </div>
+
+            <h3 style={{ fontWeight: 700, fontSize: '1.1rem', color: '#3d1a00', marginBottom: '0.5rem' }}>
+              Eliminar cuenta
+            </h3>
+            <p style={{ color: '#8a7060', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+              Esta acción no se puede deshacer. Se eliminarán todos tus datos, favoritos y planes.
+            </p>
+
+            {/* Input confirmación */}
+            <div style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+              <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#b85c1a', display: 'block', marginBottom: '0.5rem' }}>
+                Escribe <strong>ELIMINAR</strong> para confirmar:
+              </label>
+              <input
+                type="text"
+                value={confirmacionEliminar}
+                onChange={e => setConfirmacionEliminar(e.target.value.toUpperCase())}
+                placeholder="ELIMINAR"
+                style={{
+                  width: '100%',
+                  padding: '0.65rem 0.875rem',
+                  borderRadius: '0.75rem',
+                  border: '1.5px solid #fee2e2',
+                  background: '#fef2f2',
+                  color: '#dc2626',
+                  fontSize: '0.9rem',
+                  outline: 'none',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                }}
+              />
+            </div>
+
+            {/* Botones */}
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={() => {
+                  setMostrarEliminar(false);
+                  setConfirmacionEliminar('');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  borderRadius: '0.75rem',
+                  border: '1.5px solid #e5d5c5',
+                  background: '#f5ede3',
+                  color: '#3d1a00',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseOver={e => e.target.style.background = '#ede1d5'}
+                onMouseOut={e => e.target.style.background = '#f5ede3'}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={manejarEliminarCuenta}
+                disabled={confirmacionEliminar !== 'ELIMINAR' || borrando}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  borderRadius: '0.75rem',
+                  border: 'none',
+                  background: confirmacionEliminar === 'ELIMINAR' && !borrando ? '#dc2626' : '#f5d3d3',
+                  color: 'white',
+                  fontWeight: 600,
+                  cursor: confirmacionEliminar === 'ELIMINAR' && !borrando ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                {borrando ? (
+                  <><div style={{ width: '1rem', height: '1rem', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> Eliminando...</>
+                ) : (
+                  <><Trash2 size={16} /> Eliminar</>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
