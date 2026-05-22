@@ -72,7 +72,8 @@ export default function PaginaListaCompra() {
               </button>
               <button
                 onClick={async () => {
-                  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+                  try {
+                    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
                   const pageWidth = doc.internal.pageSize.getWidth();
                   const resumen = generarResumen(items);
 
@@ -124,6 +125,20 @@ export default function PaginaListaCompra() {
 
                   const fileName = `lista_compra_${new Date().toISOString().slice(0,10)}.pdf`;
                   doc.save(fileName);
+                  // Indicar éxito al usuario
+                  try {
+                    // eslint-disable-next-line no-alert
+                    alert(`PDF generado: ${fileName}`);
+                  } catch {}
+                } catch (err) {
+                  // Mostrar y loggear el error para depuración en el navegador
+                  // eslint-disable-next-line no-console
+                  console.error('Error generando PDF:', err);
+                  try {
+                    // eslint-disable-next-line no-alert
+                    alert('Error al generar el PDF. Abre la consola del navegador para más detalles.');
+                  } catch {}
+                }
                 }}
                 className="text-xs px-3 py-1.5 rounded-full bg-white border border-[#E8631A]/20 text-[#b85c1a] hover:bg-[#fff6ee] flex items-center gap-2"
               >
