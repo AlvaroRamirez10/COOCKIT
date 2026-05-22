@@ -4,7 +4,7 @@ import { useListaCompraStore } from '../stores/listaCompraStore';
 import NavegacionInferior from '../components/NavegacionInferior';
 import BarraBusqueda from '../components/BarraBusqueda';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 function generarResumen(items) {
   const total = items.length;
@@ -100,7 +100,7 @@ export default function PaginaListaCompra() {
                   // Table using autoTable
                   const body = items.map(it => [String(it.nombre), formatearCantidad(it.cantidad), String(it.receta)]);
 
-                  doc.autoTable({
+                  autoTable(doc, {
                     head: [['Producto', 'Cantidad', 'Receta']],
                     body,
                     startY: 150,
