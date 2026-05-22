@@ -4,6 +4,7 @@ import { useListaCompraStore } from '../stores/listaCompraStore';
 import NavegacionInferior from '../components/NavegacionInferior';
 import BarraBusqueda from '../components/BarraBusqueda';
 import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 function generarResumen(items) {
   const total = items.length;
@@ -71,38 +72,55 @@ export default function PaginaListaCompra() {
               </button>
               <button
                 onClick={async () => {
-                  // Generar PDF con resumen y lista
                   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+                  const pageWidth = doc.internal.pageSize.getWidth();
                   const resumen = generarResumen(items);
 
+                  // Header
+                  doc.setFillColor(232, 99, 26);
+                  doc.rect(0, 0, pageWidth, 70, 'F');
+                  doc.setTextColor(255, 255, 255);
                   doc.setFontSize(18);
-                  doc.text('Lista de compra - Coockit', 40, 50);
+                  doc.text('Coockit — Lista de compra', 40, 45);
+                  doc.setFontSize(10);
+                  doc.text(`Fecha: ${new Date().toLocaleString()}`, pageWidth - 200, 45);
+
+                  // Summary box
+                  doc.setDrawColor(200);
+                  doc.setFillColor(255, 255, 255);
+                  doc.roundedRect(40, 80, pageWidth - 80, 48, 6, 6, 'F');
+                  doc.setTextColor(0, 0, 0);
                   doc.setFontSize(11);
-                  doc.text(`Total items: ${resumen.total}`, 40, 80);
-                  doc.text(`Pendientes: ${resumen.pendientes}`, 160, 80);
-                  doc.text(`Comprados: ${resumen.comprados}`, 300, 80);
-                  doc.text(`Recetas distintas: ${resumen.recetas}`, 420, 80);
+                  doc.text(`Total items: ${resumen.total}`, 56, 102);
+                  doc.text(`Pendientes: ${resumen.pendientes}`, 200, 102);
+                  doc.text(`Comprados: ${resumen.comprados}`, 340, 102);
+                  doc.text(`Recetas distintas: ${resumen.recetas}`, 460, 102);
 
-                  // Encabezado tabla
-                  doc.setFontSize(12);
-                  const startY = 110;
-                  doc.text('Producto', 40, startY);
-                  doc.text('Cantidad', 300, startY);
-                  doc.text('Receta', 420, startY);
+                  // Table using autoTable
+                  const body = items.map(it => [String(it.nombre), formatearCantidad(it.cantidad), String(it.receta)]);
 
-                  // Filas
-                  let y = startY + 16;
-                  for (const it of items) {
-                    if (y > 750) {
-                      doc.addPage();
-                      y = 50;
-                    }
-                    doc.setFontSize(10);
-                    doc.text(String(it.nombre), 40, y, { maxWidth: 240 });
-                    doc.text(formatearCantidad(it.cantidad), 300, y, { maxWidth: 110 });
-                    doc.text(String(it.receta), 420, y, { maxWidth: 130 });
-                    y += 16;
-                  }
+                  doc.autoTable({
+                    head: [['Producto', 'Cantidad', 'Receta']],
+                    body,
+                    startY: 150,
+                    theme: 'striped',
+                    headStyles: { fillColor: [232, 99, 26], textColor: 255, halign: 'center' },
+                    styles: { fontSize: 10, cellPadding: 6 },
+                    alternateRowStyles: { fillColor: [245, 245, 245] },
+                    columnStyles: {
+                      0: { cellWidth: 240 },
+                      1: { cellWidth: 110 },
+                      2: { cellWidth: 130 },
+                    },
+                    didDrawPage: (data) => {
+                      // Footer
+                      const pageCount = doc.getNumberOfPages();
+                      doc.setFontSize(9);
+                      doc.setTextColor(150);
+                      const footer = `Página ${doc.internal.getCurrentPageInfo().pageNumber} / ${pageCount}`;
+                      doc.text(footer, pageWidth - 80, doc.internal.pageSize.getHeight() - 30);
+                    },
+                  });
 
                   const fileName = `lista_compra_${new Date().toISOString().slice(0,10)}.pdf`;
                   doc.save(fileName);

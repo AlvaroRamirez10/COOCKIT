@@ -15,6 +15,13 @@ Resumen: se añade un botón `Imprimir` en la página `PaginaListaCompra` que ge
 - Tabla simple: columnas `Producto`, `Cantidad`, `Receta`.
 - Nombre de archivo: `lista_compra_YYYY-MM-DD.pdf`.
 
+Ahora el PDF incluye estilo mejorado:
+
+- Cabecera coloreada con el nombre del proyecto y la fecha.
+- Caja de resumen con los totales calculados.
+- Tabla con filas alternadas (rayada) y cabecera con color corporativo.
+- Pie de página con numeración.
+
 3) Implementación técnica
 
 - Biblioteca usada: `jspdf`.
