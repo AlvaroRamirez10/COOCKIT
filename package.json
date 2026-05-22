@@ -8,7 +8,6 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "vitest run",
-    "docs:pdf": "md-to-pdf docs/manual-vitest.md",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -31,7 +30,6 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "jsdom": "^29.1.1",
-    "md-to-pdf": "^5.2.5",
     "vite": "^8.0.0",
     "vitest": "^4.1.7"
   }

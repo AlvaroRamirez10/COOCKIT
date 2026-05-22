@@ -9,12 +9,6 @@ Aplicación React + Vite para gestión de recetas, favoritos, lista de compra y 
 - `npm run lint`: ejecuta ESLint.
 - `npm run test`: ejecuta los tests unitarios con Vitest.
 
-## Pruebas unitarias
-
-Se ha añadido un manual del proceso en [docs/manual-vitest.md](docs/manual-vitest.md).
-
-Ahí se explica qué se probó, cómo se configuró Vitest y cómo ejecutar la batería de pruebas.# React + Vite
-
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
