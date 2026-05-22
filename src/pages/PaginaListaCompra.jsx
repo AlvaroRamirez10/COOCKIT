@@ -1,8 +1,21 @@
 import { useState } from 'react';
-import { CheckCircle2, Circle, Trash2, ListPlus, ShoppingCart } from 'lucide-react';
+import { CheckCircle2, Circle, Trash2, ListPlus, ShoppingCart, Printer } from 'lucide-react';
 import { useListaCompraStore } from '../stores/listaCompraStore';
 import NavegacionInferior from '../components/NavegacionInferior';
 import BarraBusqueda from '../components/BarraBusqueda';
+import { jsPDF } from 'jspdf';
+
+function generarResumen(items) {
+  const total = items.length;
+  const comprados = items.filter(i => i.comprado).length;
+  const pendientes = total - comprados;
+  const recetas = Array.from(new Set(items.map(i => i.receta))).length;
+  return { total, comprados, pendientes, recetas };
+}
+
+function formatearCantidad(cantidad) {
+  return cantidad && cantidad.trim() ? cantidad : 'Cantidad al gusto';
+}
 
 export default function PaginaListaCompra() {
   const { items, alternarComprado, eliminarItem, limpiarComprados, limpiarTodo } = useListaCompraStore();
@@ -55,6 +68,48 @@ export default function PaginaListaCompra() {
                 className="text-xs px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"
               >
                 Vaciar lista
+              </button>
+              <button
+                onClick={async () => {
+                  // Generar PDF con resumen y lista
+                  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+                  const resumen = generarResumen(items);
+
+                  doc.setFontSize(18);
+                  doc.text('Lista de compra - Coockit', 40, 50);
+                  doc.setFontSize(11);
+                  doc.text(`Total items: ${resumen.total}`, 40, 80);
+                  doc.text(`Pendientes: ${resumen.pendientes}`, 160, 80);
+                  doc.text(`Comprados: ${resumen.comprados}`, 300, 80);
+                  doc.text(`Recetas distintas: ${resumen.recetas}`, 420, 80);
+
+                  // Encabezado tabla
+                  doc.setFontSize(12);
+                  const startY = 110;
+                  doc.text('Producto', 40, startY);
+                  doc.text('Cantidad', 300, startY);
+                  doc.text('Receta', 420, startY);
+
+                  // Filas
+                  let y = startY + 16;
+                  for (const it of items) {
+                    if (y > 750) {
+                      doc.addPage();
+                      y = 50;
+                    }
+                    doc.setFontSize(10);
+                    doc.text(String(it.nombre), 40, y, { maxWidth: 240 });
+                    doc.text(formatearCantidad(it.cantidad), 300, y, { maxWidth: 110 });
+                    doc.text(String(it.receta), 420, y, { maxWidth: 130 });
+                    y += 16;
+                  }
+
+                  const fileName = `lista_compra_${new Date().toISOString().slice(0,10)}.pdf`;
+                  doc.save(fileName);
+                }}
+                className="text-xs px-3 py-1.5 rounded-full bg-white border border-[#E8631A]/20 text-[#b85c1a] hover:bg-[#fff6ee] flex items-center gap-2"
+              >
+                <Printer size={14} /> Imprimir
               </button>
             </div>
 
